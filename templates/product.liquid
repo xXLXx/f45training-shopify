@@ -1,0 +1,215 @@
+<div itemscope itemtype="http://schema.org/Product">
+
+  {% assign current_variant = product.selected_or_first_available_variant %}
+  {% assign featured_image = current_variant.featured_image | default: product.featured_image %}
+
+  <meta itemprop="url" content="{{ shop.url }}{{ current_variant.url }}">
+  <meta itemprop="image" content="{{ featured_image | img_url: 'grande' }}">
+
+  <div class="section-header section-header--breadcrumb">
+    {% include 'breadcrumb' %}
+  </div>
+
+  <div class="product-single">
+    <div class="grid product-single__hero">
+      <div class="grid__item large--one-half">
+
+        {% if settings.product_thumbnails_position == 'below' or product.images.size < 2 %}
+
+          <div class="product-single__photos" id="ProductPhoto">
+            <img src="{{ featured_image | img_url: '1024x1024' }}" alt="{{ featured_image.alt | escape }}" id="ProductPhotoImg"{% if settings.product_image_zoom_type == 'zoom-in' %} data-zoom="{{ featured_image | img_url: '1024x1024' }}"{% endif %} data-image-id="{{ featured_image.id }}">
+          </div>
+
+          {% if product.images.size > 1 %}
+
+            <ul class="product-single__thumbnails grid-uniform" id="ProductThumbs">
+              {% for image in product.images %}
+                <li class="grid__item large--one-third medium-down--one-third">
+                  <a data-image-id="{{ image.id }}" href="{{ image.src | img_url: '1024x1024' }}" class="product-single__thumbnail">
+                    <img src="{{ image.src | img_url: 'grande' }}" alt="{{ image.alt | escape }}">
+                  </a>
+                </li>
+              {% endfor %}
+            </ul>
+
+          {% endif %}
+
+        {% else %}
+
+          <div class="grid">
+
+            <div class="grid__item four-fifths product-single__photos" id="ProductPhoto">
+              <img src="{{ featured_image | img_url: '1024x1024' }}" alt="{{ featured_image.alt | escape }}" id="ProductPhotoImg"{% if settings.product_image_zoom_type == 'zoom-in' %} data-zoom="{{ featured_image | img_url: '1024x1024' }}"{% endif %} data-image-id="{{ featured_image.id }}">
+            </div>
+
+            <div class="grid__item one-fifth">
+
+              <ul class="grid product-single__thumbnails" id="ProductThumbs">
+                {% for image in product.images %}
+                  <li class="grid__item">
+                    <a data-image-id="{{ image.id }}" href="{{ image.src | img_url: '1024x1024' }}" class="product-single__thumbnail">
+                      <img src="{{ image.src | img_url: 'grande' }}" alt="{{ image.alt | escape }}">
+                    </a>
+                  </li>
+                {% endfor %}
+              </ul>
+
+            </div>
+
+          </div>
+
+        {% endif %}
+
+        {% if settings.product_image_zoom_type == 'lightbox' %}
+        <ul class="gallery" class="hidden">
+          {% for image in product.images %}
+          <li data-image-id="{{ image.id }}" class="gallery__item" data-mfp-src="{{ image | img_url: '1024x1024' }}"></li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+
+      </div>
+      <div class="grid__item large--one-half">
+        {% comment %}
+          <h3 itemprop="brand">{{ product.vendor }}</h3>
+        {% endcomment %}
+        <h1 itemprop="name" content="{{ product.title }}{% unless current_variant.title == 'Default Title' %} - {{ current_variant.title }}{% endunless %}">{{ product.title }}</h1>
+
+        <div itemprop="offers" itemscope itemtype="http://schema.org/Offer">
+
+          <meta itemprop="priceCurrency" content="{{ shop.currency }}">
+          <link itemprop="availability" href="http://schema.org/{% if current_variant.available %}InStock{% else %}OutOfStock{% endif %}">
+
+          <div class="product-single__prices">
+            {% assign lhm_discount = 0 %}
+            {% if product.id == 509547905054  %}
+              {% assign lhm_discount = current_variant.price | times: 0.20 %}
+              <s>
+                <span id="ProductPrice" class="cart-item__original-price" itemprop="price" content="{{ current_variant.price | divided_by: 100.00 }}">
+                  {{ current_variant.price | money }}
+              	</span>
+              </s>
+              <small class="product-single__price">{{ current_variant.price | minus: lhm_discount | money }}</small>
+            {% else %}
+              <span id="ProductPrice" class="product-single__price" itemprop="price" content="{{ current_variant.price | divided_by: 100.00 }}">
+                {{ current_variant.price | money }}
+              </span>
+            {% endif %}
+
+            {% if product.compare_at_price_max > product.price %}
+              <s id="ComparePrice" class="product-single__sale-price">
+                {{ current_variant.compare_at_price | money }}
+              </s>
+            {% endif %}
+          </div>
+
+          {% if product.available %}
+          <form action="/cart/add" data-productid="{{product.id}}" method="post" enctype="multipart/form-data" id="AddToCartForm"> 
+{% if product.available %}{% include 'subscription-product' %}{% endif %} 
+            {% endif %}
+            <select name="id" data-productid="{{product.id }}" id="productSelect" class="product-single__variants">
+              {% for variant in product.variants %}
+                <option {% unless variant.available %} disabled="disabled" {% endunless %} {% if variant == current_variant %} selected="selected" {% endif %} data-sku="{{ variant.sku }}" value="{{ variant.id }}">{{ variant.title }} - {% if variant.available %}{{ variant.price | money_with_currency }}{% else %}{{ 'products.product.sold_out' | t }}{% endif %}</option>
+              {% endfor %}
+            </select>
+
+            <div class="product-single__quantity{% unless settings.product_quantity_enable %} is-hidden{% endunless %}">
+              {% unless product.id == 509547905054 %}
+              <label for="Quantity">{{ 'products.product.quantity' | t }}</label>
+              <input type="number" id="Quantity" name="quantity" value="1" min="1" class="quantity-selector">
+              {% endunless %}
+              {% if product.id == 509547905054 %}
+              <p>Subscribe and get 20% discount</p>
+              {% endif %}
+            </div>
+
+            <button type="submit" name="add" id="AddToCart" class="btn addtocart">
+              <span id="AddToCartText">{{ 'products.product.add_to_cart' | t }}</span>
+            </button>
+            {% if product.available %}
+          </form>
+          {% endif %}
+
+                  {% unless product.available %}
+<div id="sold-out">
+  {% form 'contact' %}
+    {% if form.posted_successfully? %}
+    <p class="accent-text">Thanks! We will notify you when this product becomes available!</p>
+    {% else %}
+    <p>Click <a id="notify-me" href="#"><strong>here</strong></a> to be notified by email when {{ product.title }} becomes available.</p>
+    {% endif %}
+    {% if form.errors %}
+    <div class="error feedback accent-text">
+      <p>Please provide a valid email address.</p>
+    </div>
+    {% endif %}
+    {% unless form.posted_successfully? %}
+    <div id="notify-me-wrapper" class="clearfix" style="display:none">
+      {% if customer %}
+      <input type="hidden" name="contact[email]" value="{{ customer.email }}" />
+      {% else %}
+      <input style="float:left; width:180px;" required="required" type="email" name="contact[email]" placeholder="your@email.com" class="styled-input{% if form.errors contains 'email' %} error{% endif %}" value="{{ contact.fields.email }}" />
+      {% endif %}
+      <input type="hidden" name="contact[body]" value="Please notify me when {{ product.title | escape }} becomes available." />
+      <input style="float:left; margin-left:5px;" class="btn styled-submit" type="submit" value="Send" />         
+    </div>
+    {% endunless %}
+  {% endform %}
+</div>
+{% endunless %}
+          
+          <div class="ro_widget"></div>
+          
+          <div class="product-description rte" itemprop="description">
+            {{ product.description }}
+          </div>
+
+          {% if settings.social_sharing_products %}
+            <hr class="hr--clear hr--small">
+            {% include 'social-sharing' %}
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  {% if settings.product_related_enable %}
+    {% include 'related-products' %}
+  {% endif %}
+
+</div>
+
+{{ 'option_selection.js' | shopify_asset_url | script_tag }}
+<script>
+  var selectCallback = function(variant, selector) {
+    timber.productPage({
+      money_format: "{{ shop.money_format }}",
+      variant: variant,
+      selector: selector,
+      translations: {
+        add_to_cart : "{{ 'products.product.add_to_cart' | t }}",
+        sold_out : "{{ 'products.product.sold_out' | t }}",
+        unavailable : "{{ 'products.product.unavailable' | t }}"
+      }
+    });
+  };
+
+  jQuery(function($) {
+    new Shopify.OptionSelectors('productSelect', {
+      product: {{ product | json }},
+      onVariantSelected: selectCallback,
+      enableHistoryState: true
+    });
+
+    // Add label if only one product option and it isn't 'Title'. Could be 'Size'.
+    {% if product.options.size == 1 and product.options.first != 'Title' %}
+      $('.selector-wrapper:eq(0)').prepend('<label for="productSelect-option-0">{{ product.options.first | escape }}</label>');
+    {% endif %}
+
+    // Hide selectors if we only have 1 variant and its title contains 'Default'.
+    {% if product.variants.size == 1 and product.variants.first.title contains 'Default' %}
+      $('.selector-wrapper').hide();
+    {% endif %}
+  });
+</script>
